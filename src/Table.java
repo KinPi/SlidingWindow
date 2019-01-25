@@ -18,41 +18,36 @@ public class Table {
         table.add(node);
     }
 
-    public void calculateStreaks () {
+    public void calculateTrueStreaks() {
         Node previous = inflectionTable.getFirst();
         for (Node node : table) {
-            if (!inflectionTable.contains(node)) {
-                node.streak = previous.streak + (node.time - previous.time);
+            if (node.predicate && !inflectionTable.contains(node)) {
+                node.trueStreak = previous.trueStreak + (node.time - previous.time);
             }
             else {
-                node.streak = 0;
+                node.trueStreak = 0;
             }
             previous = node;
         }
     }
 
-    public void calculateDisplacements () {
+    public void calculateFalseStreakBeforeTurningTrue() {
         Node previous = inflectionTable.getFirst();
         for (Node node : table) {
             if (!node.predicate) {
-                node.displacement = Integer.MAX_VALUE;
+                node.falseStreakBeforeTurningTrue = Integer.MIN_VALUE;
             }
             else if (inflectionTable.contains(node)) {
                 int index = inflectionTable.indexOf(node);
                 if (index == 0) {
-                    node.displacement = Integer.MAX_VALUE;
+                    node.falseStreakBeforeTurningTrue = Integer.MIN_VALUE;
                 }
                 else {
-                    node.displacement = -1 * (node.time - inflectionTable.get(index - 1).time);
+                    node.falseStreakBeforeTurningTrue = node.time - inflectionTable.get(index - 1).time;
                 }
             }
             else {
-                if (previous.displacement == Integer.MAX_VALUE) {
-                    node.displacement = Integer.MAX_VALUE;
-                }
-                else {
-                    node.displacement = previous.displacement + (node.time - previous.time);
-                }
+                node.falseStreakBeforeTurningTrue = previous.falseStreakBeforeTurningTrue;
             }
             previous = node;
         }
@@ -71,8 +66,8 @@ public class Table {
         Node node = null;
         if (time < first.time) {
             node = new Node(time, first.predicate);
-            node.streak = 0;
-            node.displacement = Integer.MAX_VALUE;
+            node.trueStreak = 0;
+            node.falseStreakBeforeTurningTrue = Integer.MIN_VALUE;
         }
         else {
             Node previous = null;
@@ -90,13 +85,14 @@ public class Table {
             if (previous != null) {
                 node = new Node(time, previous.predicate);
 
-                node.streak = previous.streak + (node.time - previous.time);
-
-                if (previous.displacement == Integer.MAX_VALUE) {
-                    node.displacement = Integer.MAX_VALUE;
+                if (previous.predicate) {
+                    node.trueStreak = previous.trueStreak + (node.time - previous.time);
+                    node.falseStreakBeforeTurningTrue = previous.falseStreakBeforeTurningTrue;
                 }
+
                 else {
-                    node.displacement = previous.displacement + (node.time - previous.time);
+                    node.trueStreak = 0;
+                    node.falseStreakBeforeTurningTrue = Integer.MIN_VALUE;
                 }
             }
         }
@@ -105,14 +101,13 @@ public class Table {
 
     public void calculateFireTimesArrivalDeparture (int minFalse, int minTrue, int currentTime) {
         System.out.println("Fire Times For Arrival And Departure Rules");
-        int displacementLimit = minTrue - minFalse;
         for (Node node : inflectionTable) {
             if (node.predicate) {
                 if (node.time + minTrue > currentTime) {
                     break;
                 }
                 Node resultNode = calculateAtTime(node.time + minTrue);
-                if (resultNode.displacement <= displacementLimit && resultNode.streak == minTrue) {
+                if (resultNode.trueStreak == minTrue && resultNode.falseStreakBeforeTurningTrue >= minFalse) {
                     System.out.println(resultNode);
                 }
             }
@@ -130,7 +125,7 @@ public class Table {
                         break;
                     }
                     Node resultNode = calculateAtTime(node.time + increment);
-                    if (resultNode != null && resultNode.predicate && resultNode.streak >= minTrue) {
+                    if (resultNode != null && resultNode.predicate && resultNode.trueStreak >= minTrue) {
                         System.out.println(resultNode);
                         increment += minTimeSinceLastFire;
                     }

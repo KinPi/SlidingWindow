@@ -3,8 +3,8 @@ import java.util.StringJoiner;
 public class Node {
     public int time;
     public boolean predicate;
-    public int streak;
-    public int displacement;
+    public int trueStreak;
+    public int falseStreakBeforeTurningTrue;
 
     public Node (int time, boolean predicate) {
         this.time = time;
@@ -15,8 +15,8 @@ public class Node {
         StringJoiner sj = new StringJoiner(", ", "(", ")");
         sj.add("Time: " + time);
         sj.add("Predicate: " + predicate);
-        sj.add("Streak: " + streak);
-        sj.add("Displacement: " + displacement);
+        sj.add("True Streak: " + trueStreak);
+        sj.add("False Streak Before Turning True: " + falseStreakBeforeTurningTrue);
         return sj.toString();
     }
 }
